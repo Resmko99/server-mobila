@@ -97,32 +97,24 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    // Получаем данные пользователя по номеру телефона или user_acctag
     const result = await pool.query(
       'SELECT user_id, user_password FROM users WHERE user_phone_number = $1 OR user_acctag = $1',
       [identifier]
     );
 
-    if (result.rows.length === 0) {
+    if (result.rows.length === 0 || result.rows[0].user_password !== user_password) {
       return res.status(400).json({ message: 'Неверные учетные данные' });
     }
 
-    const user = result.rows[0];
-
-    // Проверяем, совпадает ли введенный пароль с паролем в базе данных
-    if (user.user_password !== user_password) {
-      return res.status(400).json({ message: 'Неверные учетные данные' });
-    }
-
-    // Если все верно, возвращаем user_id
-    res.status(200).json({ message: 'Успешный вход', user_id: user.user_id });
-
+    res.status(200).json({
+      message: 'Успешный вход',
+      user_id: result.rows[0].user_id,
+    });
   } catch (err) {
-    console.error('Ошибка при выполнении запроса:', err);
-    res.status(500).json({ message: 'Ошибка при проверке данных' });
+    console.error('Ошибка при выполнении запроса:', err.message);
+    res.status(500).json({ message: 'Ошибка сервера' });
   }
 });
-
 
 app.get('/home/:id', async (req, res) => {
   const userId = req.params.id; // Получаем ID из параметров запроса
@@ -315,5 +307,5 @@ app.delete('/settings/:id', async (req, res) => {
 
 // Запуск сервера
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running at http://95.163.223.203:${port}`);
 });
